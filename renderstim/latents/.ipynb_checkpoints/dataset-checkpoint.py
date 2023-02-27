@@ -20,7 +20,7 @@ KUBASIC_IDS = (
 
 TEXTURES = [
     'NONE',
-    'IMAGE',
+    # 'IMAGE',
     'CLOUDS',
     'DISTORTED_NOISE',
     'MAGIC',
@@ -45,27 +45,20 @@ def latent_dataset(
     camera_sensor_width: float = 30.0,
     floor_scale: List[float] = [20.0, 40.0, 0.01],
     floor_position: List[float] = [0.0, 0.0, 0.0],
-    background_type: str = "mixed"
+    background_type: str = "artificial",
+    dataset_comment: str = "test"
 ) -> List[Dict]:
     
     """
     A dataset returns a list of dictionaries, each dictionary is the config for a single scene.
     default values are set for mouse data.
-    for monkey data, use:
-        resolution = [256, 256]
-        spawn_region = [[-2.5, -3.0, 0.2], [2.5, 3.0, 1.5]]
-        sun_position = [0.0, 0.0, 7.0]
-        camera_position = [0.0, -6.0, 4.0]
-        camera_look_at = [0.0, 0.0, 0.0]
-        floor_scale = [30.0, 30.0, 0.01]
-
 
     The dataset thus contains all the scenes that will be subsequently generated.
     The list of config dictionaries will be passed to the ImageConfig table, and from there it will be rendered.
     So this function will not generate scenes yet, but it will create the configs that will generate the scenes.
 
     Args:
-        num_scenes: number of scenes
+        num_scenes: number of scenes to generate scene configs for
         resolution: (height, width)
         min_num_objects: minimum number of objects in a scene
         max_num_objects: maximum number of objects in a scene
@@ -77,7 +70,8 @@ def latent_dataset(
         camera_sensor_width: sensor width of the camera
         floor_scale: [x, y, z]
         floor_position: [x, y, z]
-        background_type: "mixed" or "realistic"
+        background_type: "artificial" or "realistic"
+        dataset_comment: str describing the dataset
 
     Returns:
         A list of dictionaries, each dictionary is the config for a single image.
@@ -125,15 +119,10 @@ def latent_dataset(
         )
         
     rng = np.random.default_rng()
-    seeds = rng.choice(
-        low=0, 
-        high=2147483647, 
-        size=num_scenes, 
-        replace=False
-    )
+    seeds = rng.choice(2147483647, size=num_scenes, replace=False)
     scenes = []
     
-    for seed in range(seeds):
+    for seed in seeds:
         latents = {}
 
         rng = np.random.RandomState(seed)
@@ -169,7 +158,7 @@ def latent_dataset(
         latents["floor_position"] = floor_position
 
         # set background type
-        if background_type == "mixed":
+        if background_type == "artificial":
             latents["bg_texture"] = get_texture(
                 rng.choice(TEXTURES), rng, True
             )
@@ -178,7 +167,9 @@ def latent_dataset(
                 "IMAGE", rng, True
             )
         else:
-            raise ValueError("Invalid background type: background_type can be either 'mixed' or 'realistic'")
+            raise ValueError(
+                "Invalid background type: background_type can be either 'artificial' or 'realistic'"
+            )
 
         # set the background material
         latents["bg_material"] = get_material(rng)

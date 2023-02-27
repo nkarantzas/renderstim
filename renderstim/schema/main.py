@@ -1,5 +1,5 @@
 import warnings
-from typing import Dict
+from typing import Dict, List
 import datajoint as dj
 from nnfabrik.builder import resolve_data
 from nnfabrik.utility.nnf_helper import cleanup_numpy_scalar
@@ -62,7 +62,39 @@ class LatentDataset(dj.Manual):
                 keys.append(key_copy)
 
             self.insert(keys)
+        
+        def replace(self, key: Dict = None, bad_hashes: List = None):
+            if key is None:
+                key = {}
+            
+            if bad_hashes is None:
+                return
+            
+            key = (self.master() & key).fetch1("KEY")   
+            
+            if len(bad_hashes) != 0:
+                # delete the non generated scene configs
+                for h in bad_hashes:
+                    ((self & key) & dict(scene_hash=h)).delete_quick()
+                    
+                print(f"Deleted {len(bad_hashes)} from LatentDataset.SceneConfig")
+                dataset_fn, dc = (self.master() & key).fn_config
+                dataset_fn = resolve_data(dataset_fn)
+                
+                dc['num_scenes'] = len(bad_hashes)
+                dc = cleanup_numpy_scalar(dc)
+                scs = dataset_fn(**dc)
 
+                keys = []
+                for sc in scs:
+                    key_copy = key.copy()
+                    key_copy["scene_hash"] = make_hash(sc)
+                    key_copy["scene_config"] = sc
+                    keys.append(key_copy)
+
+                self.insert(keys)
+                print("... Replacing individual scene configs ...")
+                    
     @property
     def fn_config(self):
         dataset_fn, dataset_config = self.fetch1("dataset_fn", "dataset_config")
@@ -126,7 +158,8 @@ class LatentDataset(dj.Manual):
         except (NameError, TypeError) as e:
             warnings.warn(str(e) + "\nTable entry rejected")
             return
-
+        
+        dataset_config["dataset_comment"] = dataset_comment
         dataset_hash = make_hash(dataset_config)
 
         key = dict(
@@ -136,7 +169,7 @@ class LatentDataset(dj.Manual):
             dataset_config=dataset_config,
             dataset_comment=dataset_comment,
         )
-
+        
         existing = self.proj() & key
 
         if existing:

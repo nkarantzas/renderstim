@@ -1,3 +1,4 @@
-from nnfabrik.utility.dj_helpers import Schema
+import datajoint as dj
 
-schema = Schema("nikoskar_rendered_images")
+# schema = dj.schema("nikoskar_rendered_images")
+schema = dj.schema("pipeline_rendered_images")

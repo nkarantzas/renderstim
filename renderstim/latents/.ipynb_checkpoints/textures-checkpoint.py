@@ -1,13 +1,12 @@
-import bpy
+from kubric.safeimport.bpy import bpy
 from glob import glob
 
-bg_textures = glob("/mnt/bg_textures/*.png")
-obj_textures = glob("/mnt/obj_textures/*.png")
+
+TEXTURE_IMAGES = glob("/mnt/image_textures/*.png")
 
 def get_texture(type, rng, background=False):
     if background: size = 3192
     else: size = 256
-    TEXTURE_IMAGES = obj_textures + bg_textures
     
     if type == 'CLOUDS':
         cloud_noise_basis = [

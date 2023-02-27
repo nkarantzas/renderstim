@@ -9,30 +9,16 @@ spec:
       priorityClassName: medium-priority
       restartPolicy: Never
       hostNetwork: true
-      affinity: # Affinity to select certain nodes with 11GB, 12GB, or 24GB memory
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution: # Require nodes to have this label
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname # Target label is gpu_mem_size
-                operator: In # Key must have one of the following values
-                values:
-                - at-compute004
-                - at-compute005
-                - at-compute006
       volumes: # Example volume mounting
-      - name: bg_textures # name for the volume to be referenced in container volumeMounts
+      - name: textures # volume as referenced in the container
+        hostPath: # host machine dir
+          path: /mnt/scratch05/rendered_stimuli/image_textures 
+      - name: external 
         hostPath:
-          path: /mnt/scratch05/rendered_stimuli/bg_textures # Directory on the host machine to be mounted
-      - name: obj_textures # name for the volume to be referenced in container volumeMounts
+          path: /mnt/dj-stor01 
+      - name: project 
         hostPath:
-          path: /mnt/scratch05/rendered_stimuli/obj_textures # Directory on the host machine to be mounted
-      - name: external # name for the volume to be referenced in container volumeMounts
-        hostPath:
-          path: /mnt/dj-stor01 # Directory on the host machine to be mounted
-      - name: project # name for the volume to be referenced in container volumeMounts
-        hostPath:
-          path: /mnt/scratch05/rendered_stimuli/renderstim # Directory on the host machine to be mounted
+          path: /mnt/scratch05/rendered_stimuli/renderstim 
       containers:
       - name: latents
         image: at-docker:5000/nkrender:latest
@@ -41,11 +27,9 @@ spec:
           requests:
             cpu: 10
             memory: 64Gi
-        volumeMounts: # Container reference to volumes define above
-        - name: bg_textures 
-          mountPath: /mnt/bg_textures
-        - name: obj_textures # Name of the volume define above
-          mountPath: /mnt/obj_textures # Location of where to mount it in the container
+        volumeMounts: # Container reference to volumes defined above
+        - name: textures 
+          mountPath: /mnt/image_textures
         - name: external
           mountPath: /external
         - name: project
@@ -77,5 +61,5 @@ spec:
               name: github-credentials
               key: GITHUB_TOKEN
         command: ["/bin/bash"]
-        args: ["-c", "jupyter lab --ip='0.0.0.0' --port=8888 --allow-root --no-browser --NotebookApp.token=''"]
+        args: ["-c", "python3 /project/renderstim/notebooks/generate.py"]
 

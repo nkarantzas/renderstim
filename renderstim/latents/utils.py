@@ -33,7 +33,8 @@ def resample_while(
         if not condition(asset):
             return
     else:
-        print("Failed to place ", asset)
+        raise RuntimeError("Failed to place", asset)
+        # print("Failed to place ", asset)
 
 
 def figure_out_overlap(

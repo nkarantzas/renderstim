@@ -10,7 +10,7 @@ dj.config.setdefault('stores', dict())
 dj.config['stores'].update({
     'rendered': dict(
         protocol='file', 
-        location='/external/nikoskar_rendered_static')
+        location='/external/pipeline-externals')
 })
 
 
@@ -43,21 +43,13 @@ class RenderedScenesBase(dj.Computed):
         depth:                             blob@rendered     
         metadata:                          longblob          # dict containing metadata about the scene
         rendering_ts=CURRENT_TIMESTAMP: timestamp            # UTZ timestamp at time of insertion
-        """.format(
-            table_comment=self.table_comment
-        )
+        """.format(table_comment=self.table_comment)
         return definition
 
     def get_generator_fn_config(self, key: Dict = None):
-        
         if key is None:
             key = {}
-
-        gf, sc = (self.scene_config_table() & key).fetch1(
-            "generator_fn", 
-            "scene_config"
-        )
-
+        gf, sc = (self.scene_config_table() & key).fetch1("generator_fn", "scene_config")
         generator_fn = resolve_generator(gf)
         scene_config = cleanup_numpy_scalar(sc)
         return generator_fn, scene_config

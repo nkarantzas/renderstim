@@ -21,8 +21,7 @@ ENV TF_CPP_MIN_LOG_LEVEL="3"
 WORKDIR /kubric/dist
 RUN pip install `ls kubric*.whl`
 
-RUN pip install "deeplake[enterprise]" && \
-    pip install datajoint==0.12.7 && \
+RUN pip install datajoint==0.12.7 && \
     pip install opencv-python && \
     pip install ipywidgets && \
     pip install jupyterlab && \
